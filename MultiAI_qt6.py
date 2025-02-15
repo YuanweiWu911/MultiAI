@@ -12,12 +12,12 @@ from openai import OpenAI
 import queue
 import re
 import requests
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QTextEdit, QVBoxLayout, QPushButton, QLineEdit,
-    QFileDialog, QComboBox, QMenuBar, QAction, QMainWindow, QMessageBox, QInputDialog
+    QFileDialog, QComboBox, QMenuBar, QMainWindow, QMessageBox, QInputDialog
 )
-from PyQt5.QtGui import QTextCursor, QTextBlockFormat, QFont, QBrush, QColor, QTextCharFormat
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal, QThread
+from PyQt6.QtGui import QTextCursor, QTextBlockFormat, QFont, QBrush, QColor, QTextCharFormat, QAction 
+from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal, QThread
 
 # 初始化日志记录器
 logger = logging.getLogger(__name__)
@@ -204,10 +204,10 @@ class MultiAI(QMainWindow):
     
         self.setGeometry(x, y, self.width, self.height)
 
-        self.height = int(screen_geometry.height() * 0.95)
+        self.height = int(screen_geometry.height() * 0.96)
         self.width = int(screen_geometry.width() / 2)
         x = screen_geometry.x() + screen_geometry.width() - self.width
-        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2
+        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2 + 20
 
         self.setGeometry(x, y, self.width, self.height)
         self.font = QFont("Arial", 11)
@@ -234,7 +234,7 @@ class MultiAI(QMainWindow):
         # 创建 QTextEdit 作为用户输入区域
         self.entry = QTextEdit(self)
         self.entry.setMinimumHeight(50)
-        self.entry.setMaximumHeight(150)
+        self.entry.setMaximumHeight(100)
         self.entry.setReadOnly(False)
         self.entry.setPlaceholderText("主人，你好！请说出你的问题，回车键发送。")
         self.entry.installEventFilter(self)
@@ -319,16 +319,16 @@ class MultiAI(QMainWindow):
     def eventFilter(self, obj, event):
         # 对 self.entry 的事件处理
         if obj is self.entry:
-            if event.type() == QEvent.Resize:
+            if event.type() == QEvent.Type.Resize:
                 # 同时调整“联网搜索”和“推理”按钮的位置，确保始终位于左下角
                 self.search_button.move(5, self.entry.height() - self.search_button.height() - 5)
                 self.think_button.move(self.search_button.x() + self.search_button.width() + 5,
                                        self.entry.height() - self.think_button.height() - 5)
                 self.record_button.move(self.think_button.x() + self.think_button.width() + 5,
                                        self.entry.height() - self.record_button.height() - 5)
-            if event.type() == QEvent.KeyPress:
-                if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-                    if event.modifiers() == Qt.ShiftModifier:
+            if event.type() == QEvent.Type.KeyPress:
+                if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                    if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
                         self.entry.insertPlainText('\n')
                     else:
                         self.send_message()
@@ -346,7 +346,7 @@ class MultiAI(QMainWindow):
         max_tokens, ok = QInputDialog.getText(self, \
             "编辑模型", \
             "max_tokens (例如: 512, 1024):", \
-            QLineEdit.Normal, \
+            QLineEdit.EchoMode.Normal, \
             str(self.model_params['max_tokens']))
         if ok:
             try:
@@ -359,7 +359,7 @@ class MultiAI(QMainWindow):
         temperature, ok = QInputDialog.getText(self,\
             "编辑模型",\
             "输入temperature (0至1, 例如: 0.8):",\
-            QLineEdit.Normal,\
+            QLineEdit.EchoMode.Normal,\
             str(self.model_params['temperature']))
         if ok:
             try:
@@ -375,7 +375,7 @@ class MultiAI(QMainWindow):
         top_p, ok = QInputDialog.getText(self,\
             "编辑模型",\
             "top_p (0至1, 例如: 0.9):",\
-            QLineEdit.Normal,\
+            QLineEdit.EchoMode.Normal,\
             str(self.model_params['top_p']))
         if ok:
             try:
@@ -396,7 +396,7 @@ class MultiAI(QMainWindow):
         """
         cursor = self.output_area.textCursor()
         block_format = QTextBlockFormat()
-        block_format.setAlignment(Qt.AlignLeft)
+        block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         # 设置 block_format 的背景色
         block_format.setBackground(QBrush(bg_color))
@@ -470,8 +470,6 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " THINK\n")
 
         if ai_response:
-            self._insert_message_block(ai_response, QColor(144, 238, 144), "black", prefix=self.current_model + " REPLY\n")
-            self.text_to_speech(ai_response)
             self._insert_message_block(ai_response, QColor(250, 240, 000), "black",
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音
@@ -588,7 +586,7 @@ class MultiAI(QMainWindow):
     def output_area_sys_message(self, sys_message):
         cursor = self.output_area.textCursor()
         block_format = QTextBlockFormat()
-        block_format.setAlignment(Qt.AlignLeft)
+        block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
         block_format.setBackground(QBrush(QColor(255, 255, 255)))
 
         cursor.insertBlock(block_format)
@@ -651,4 +649,4 @@ if __name__ == "__main__":
     window.show()
 
     # 启动Qt事件循环
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
