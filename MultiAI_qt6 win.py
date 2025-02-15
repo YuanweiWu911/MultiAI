@@ -64,17 +64,13 @@ class MultiAI(QMainWindow):
             print(f"Failed to initialize TTS: {e}")
 
         self.clients = {
-            "local_deepseek-r1:7b": None,  # 本地模型不依赖 API 客户端
-            "local_deepseek-r1:32b": None,
-            "local_deepseek-r1:70b": None,
+            "local_deepseek-r1:1.5b": None,  # 本地模型不依赖 API 客户端
             "api_openai": OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.feidaapi.com/v1"),
             "api_deepseek": OpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"),
             "api_kimi": OpenAI(api_key=os.getenv("KIMI_API_KEY"), base_url="https://api.moonshot.cn/v1"),
         }
         self.models = {
-            "local_deepseek-r1:7b": "deepseek-r1:latest",
-            "local_deepseek-r1:32b": "deepseek-r1:32b",
-            "local_deepseek-r1:70b": "deepseek-r1:70b",
+            "local_deepseek-r1:1.5b": "deepseek-r1:1.5b",
             "api_openai": "gpt-4o",
             "api_deepseek": "deepseek-chat",
             "api_kimi": "moonshot-v1-8k",
