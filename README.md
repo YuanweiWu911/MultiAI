@@ -21,7 +21,7 @@ A multi-model AI assistant desktop application supporting various large language
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - Ollama local service (for local models)
 - Valid API keys (see [Configuration](#configuration))
 
@@ -29,8 +29,8 @@ A multi-model AI assistant desktop application supporting various large language
 
 1. Clone repository
 ```bash
-git clone https://github.com/yourusername/MultiAI-Assistant.git
-cd MultiAI-Assistant
+git clone https://github.com/YuanweiWu911/MultiAI.git
+cd MultiAI
 ```
 
 2. Install dependencies
@@ -45,7 +45,6 @@ pip install -r requirements.txt
 OPENAI_API_KEY=your_openai_key
 DEEPSEEK_API_KEY=your_deepseek_key
 KIMI_API_KEY=your_kimi_key
-YUANBAO_API_KEY=your_yuanbao_key
 SERPER_API_KEY=your_serper_key
 
 # Proxy (optional)
@@ -120,7 +119,7 @@ ollama pull deepseek-r1:32b
 
 ## 环境要求
 
-- Python 3.8+
+- Python 3.10+
 - Ollama本地服务（如需使用本地模型）
 - 有效的API密钥（见[配置说明](#配置)）
 
@@ -128,8 +127,8 @@ ollama pull deepseek-r1:32b
 
 1. 克隆仓库
 ```bash
-git clone https://github.com/yourusername/MultiAI-Assistant.git
-cd MultiAI-Assistant
+git clone https://github.com/YuanweiWu911/MultiAI.git
+cd MultiAI
 ```
 
 2. 安装依赖
@@ -144,7 +143,6 @@ pip install -r requirements.txt
 OPENAI_API_KEY=your_openai_key
 DEEPSEEK_API_KEY=your_deepseek_key
 KIMI_API_KEY=your_kimi_key
-YUANBAO_API_KEY=your_yuanbao_key
 SERPER_API_KEY=your_serper_key
 
 # 代理配置（可选）
