@@ -12,16 +12,12 @@ from openai import OpenAI
 import queue
 import re
 import requests
-from PyQt5.QtWidgets import (
-     QApplication, QWidget, QLabel, QTextEdit, QVBoxLayout, QPushButton, QLineEdit,
-     QFileDialog, QComboBox, QMenuBar, QAction, QMainWindow, QMessageBox, QInputDialog
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QLabel, QTextEdit, QVBoxLayout, QPushButton, QLineEdit,
+    QFileDialog, QComboBox, QMenuBar, QMainWindow, QMessageBox, QInputDialog
 )
-from PyQt5.QtGui import (
-     QTextCursor, QTextBlockFormat, QFont, QBrush, QColor, QTextCharFormat
-)
-from PyQt5.QtCore import (
-     Qt, QEvent, QObject, pyqtSignal, QThread
-)
+from PyQt6.QtGui import QTextCursor, QTextBlockFormat, QFont, QBrush, QColor, QTextCharFormat, QAction 
+from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal, QThread
 
 # 初始化日志记录器
 logger = logging.getLogger(__name__)
@@ -41,7 +37,7 @@ class MultiAI(QMainWindow):
         初始化 MultiAI 应用程序，包括文本到语音引擎、API 客户端、模型配置以及 GUI 界面。
         """
         super().__init__()
-        self.play_audio_signal.connect(self.play_audio)  # 连接信号到槽
+        self.play_audio_signal.connect(self.play_audio)  # 连接信号到槽（新增）
         self.playback_error_signal.connect(self.handle_playback_error)  # 连接错误信号
 
         self.width = 600
@@ -68,18 +64,22 @@ class MultiAI(QMainWindow):
             print(f"Failed to initialize TTS: {e}")
 
         self.clients = {
+            "local_deepseek-r1:7b": None,  # 本地模型不依赖 API 客户端
+            "local_deepseek-r1:32b": None,
+            "local_deepseek-r1:70b": None,
             "api_openai": OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.feidaapi.com/v1"),
-            "api_kimi": OpenAI(api_key=os.getenv("KIMI_API_KEY"), base_url="https://api.moonshot.cn/v1"),
             "api_deepseek": OpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"),
-            "local_deepseek-r1:1.5b": None,  # 本地模型不依赖 API 客户端
+            "api_kimi": OpenAI(api_key=os.getenv("KIMI_API_KEY"), base_url="https://api.moonshot.cn/v1"),
         }
         self.models = {
+            "local_deepseek-r1:7b": "deepseek-r1:latest",
+            "local_deepseek-r1:32b": "deepseek-r1:32b",
+            "local_deepseek-r1:70b": "deepseek-r1:70b",
             "api_openai": "gpt-4o",
-            "api_kimi": "moonshot-v1-8k",
             "api_deepseek": "deepseek-chat",
-            "local_deepseek-r1:1.5b": "deepseek-r1:1.5b",
+            "api_kimi": "moonshot-v1-8k",
         }
-        self.current_model = "api_openai"
+        self.current_model = "local_deepseek-r1:7b"
         self.all_messages = [{"role": "system", "content": "You are a helpful assistant"}]
 
         self.setup_gui()
@@ -111,7 +111,7 @@ class MultiAI(QMainWindow):
                     async with session.post(
                         "https://google.serper.dev/search",
                         headers=headers,
-                        json={"q": query, "num": 10},
+                        json={"q": query, "num": 5},
                         proxy=proxy_url
                     ) as response:
                         response.raise_for_status()
@@ -194,12 +194,22 @@ class MultiAI(QMainWindow):
         # 获取主屏幕的可用区域
         screen = QApplication.primaryScreen()
         screen_geometry = screen.availableGeometry()
-        self.height = int(screen_geometry.height() * 0.96)
+
+        self.height = int(screen_geometry.height()*0.9)
+        self.width = int(screen_geometry.width()/2)
+        # 计算 x 坐标，使窗口的右边缘与屏幕右边缘对齐
+        x = screen_geometry.x() + screen_geometry.width() - self.width
+        # 这里设置 y 坐标为屏幕高度居中，也可以根据需求调整
+        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2
+    
+        self.setGeometry(x, y, self.width, self.height)
+
+        self.height = int(screen_geometry.height() * 0.95)
         self.width = int(screen_geometry.width() / 2)
         x = screen_geometry.x() + screen_geometry.width() - self.width
-        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2 + 20
+        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2
+
         self.setGeometry(x, y, self.width, self.height)
-        
         self.font = QFont("Arial", 11)
 
         central_widget = QWidget()
@@ -309,16 +319,16 @@ class MultiAI(QMainWindow):
     def eventFilter(self, obj, event):
         # 对 self.entry 的事件处理
         if obj is self.entry:
-            if event.type() == QEvent.Resize:
+            if event.type() == QEvent.Type.Resize:
                 # 同时调整“联网搜索”和“推理”按钮的位置，确保始终位于左下角
                 self.search_button.move(5, self.entry.height() - self.search_button.height() - 5)
                 self.think_button.move(self.search_button.x() + self.search_button.width() + 5,
                                        self.entry.height() - self.think_button.height() - 5)
                 self.record_button.move(self.think_button.x() + self.think_button.width() + 5,
                                        self.entry.height() - self.record_button.height() - 5)
-            if event.type() == QEvent.KeyPress:
-                if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-                    if event.modifiers() == Qt.ShiftModifier:
+            if event.type() == QEvent.Type.KeyPress:
+                if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                    if event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
                         self.entry.insertPlainText('\n')
                     else:
                         self.send_message()
@@ -336,7 +346,7 @@ class MultiAI(QMainWindow):
         max_tokens, ok = QInputDialog.getText(self, \
             "编辑模型", \
             "max_tokens (例如: 512, 1024):", \
-            QLineEdit.Normal, \
+            QLineEdit.EchoMode.Normal, \
             str(self.model_params['max_tokens']))
         if ok:
             try:
@@ -349,7 +359,7 @@ class MultiAI(QMainWindow):
         temperature, ok = QInputDialog.getText(self,\
             "编辑模型",\
             "输入temperature (0至1, 例如: 0.8):",\
-            QLineEdit.Normal,\
+            QLineEdit.EchoMode.Normal,\
             str(self.model_params['temperature']))
         if ok:
             try:
@@ -365,7 +375,7 @@ class MultiAI(QMainWindow):
         top_p, ok = QInputDialog.getText(self,\
             "编辑模型",\
             "top_p (0至1, 例如: 0.9):",\
-            QLineEdit.Normal,\
+            QLineEdit.EchoMode.Normal,\
             str(self.model_params['top_p']))
         if ok:
             try:
@@ -386,7 +396,7 @@ class MultiAI(QMainWindow):
         """
         cursor = self.output_area.textCursor()
         block_format = QTextBlockFormat()
-        block_format.setAlignment(Qt.AlignLeft)
+        block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         # 设置 block_format 的背景色
         block_format.setBackground(QBrush(bg_color))
@@ -460,6 +470,8 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " THINK\n")
 
         if ai_response:
+            self._insert_message_block(ai_response, QColor(144, 238, 144), "black", prefix=self.current_model + " REPLY\n")
+            self.text_to_speech(ai_response)
             self._insert_message_block(ai_response, QColor(250, 240, 000), "black",
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音
@@ -520,18 +532,13 @@ class MultiAI(QMainWindow):
         """
         使用edge_tts生成语音并保存为MP3文件
         """
-        # 生成时间戳
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.output_file = f"output_{timestamp}.mp3"  # 动态生成文件名
-
         async def async_tts():
             try:
                 communicate = edge_tts.Communicate(text, self.voice)
                 await communicate.save(self.output_file)
                 logger.info(f"语音已保存为 {self.output_file}")
-                communicate = edge_tts.Communicate(text, self.voice)
-                await communicate.save("output.mp3")
 
+                  # 播放音频文件（在GUI主线程中执行）
                 self.play_audio_signal.emit()  # 使用信号触发播放      except Exception as e:
             except Exception as e:
                 logger.error(f"语音生成失败: {str(e)}")
@@ -581,7 +588,7 @@ class MultiAI(QMainWindow):
     def output_area_sys_message(self, sys_message):
         cursor = self.output_area.textCursor()
         block_format = QTextBlockFormat()
-        block_format.setAlignment(Qt.AlignLeft)
+        block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
         block_format.setBackground(QBrush(QColor(255, 255, 255)))
 
         cursor.insertBlock(block_format)
@@ -644,4 +651,4 @@ if __name__ == "__main__":
     window.show()
 
     # 启动Qt事件循环
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

@@ -13,15 +13,11 @@ import queue
 import re
 import requests
 from PyQt5.QtWidgets import (
-     QApplication, QWidget, QLabel, QTextEdit, QVBoxLayout, QPushButton, QLineEdit,
-     QFileDialog, QComboBox, QMenuBar, QAction, QMainWindow, QMessageBox, QInputDialog
+    QApplication, QWidget, QLabel, QTextEdit, QVBoxLayout, QPushButton, QLineEdit,
+    QFileDialog, QComboBox, QMenuBar, QAction, QMainWindow, QMessageBox, QInputDialog
 )
-from PyQt5.QtGui import (
-     QTextCursor, QTextBlockFormat, QFont, QBrush, QColor, QTextCharFormat
-)
-from PyQt5.QtCore import (
-     Qt, QEvent, QObject, pyqtSignal, QThread
-)
+from PyQt5.QtGui import QTextCursor, QTextBlockFormat, QFont, QBrush, QColor, QTextCharFormat
+from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal, QThread
 
 # 初始化日志记录器
 logger = logging.getLogger(__name__)
@@ -77,7 +73,7 @@ class MultiAI(QMainWindow):
             "api_openai": "gpt-4o",
             "api_kimi": "moonshot-v1-8k",
             "api_deepseek": "deepseek-chat",
-            "local_deepseek-r1:1.5b": "deepseek-r1:1.5b",
+            "local_deepseek-r1:latest": "deepseek-r1:1.5b",
         }
         self.current_model = "api_openai"
         self.all_messages = [{"role": "system", "content": "You are a helpful assistant"}]
@@ -194,12 +190,13 @@ class MultiAI(QMainWindow):
         # 获取主屏幕的可用区域
         screen = QApplication.primaryScreen()
         screen_geometry = screen.availableGeometry()
-        self.height = int(screen_geometry.height() * 0.96)
+
+        self.height = int(screen_geometry.height() * 0.95)
         self.width = int(screen_geometry.width() / 2)
         x = screen_geometry.x() + screen_geometry.width() - self.width
-        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2 + 20
+        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2
+
         self.setGeometry(x, y, self.width, self.height)
-        
         self.font = QFont("Arial", 11)
 
         central_widget = QWidget()
@@ -224,7 +221,7 @@ class MultiAI(QMainWindow):
         # 创建 QTextEdit 作为用户输入区域
         self.entry = QTextEdit(self)
         self.entry.setMinimumHeight(50)
-        self.entry.setMaximumHeight(100)
+        self.entry.setMaximumHeight(150)
         self.entry.setReadOnly(False)
         self.entry.setPlaceholderText("主人，你好！请说出你的问题，回车键发送。")
         self.entry.installEventFilter(self)
@@ -520,18 +517,13 @@ class MultiAI(QMainWindow):
         """
         使用edge_tts生成语音并保存为MP3文件
         """
-        # 生成时间戳
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.output_file = f"output_{timestamp}.mp3"  # 动态生成文件名
-
         async def async_tts():
             try:
                 communicate = edge_tts.Communicate(text, self.voice)
                 await communicate.save(self.output_file)
                 logger.info(f"语音已保存为 {self.output_file}")
-                communicate = edge_tts.Communicate(text, self.voice)
-                await communicate.save("output.mp3")
 
+                  # 播放音频文件（在GUI主线程中执行）
                 self.play_audio_signal.emit()  # 使用信号触发播放      except Exception as e:
             except Exception as e:
                 logger.error(f"语音生成失败: {str(e)}")
