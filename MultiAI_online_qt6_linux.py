@@ -204,10 +204,10 @@ class MultiAI(QMainWindow):
     
         self.setGeometry(x, y, self.width, self.height)
 
-        self.height = int(screen_geometry.height() * 0.95)
+        self.height = int(screen_geometry.height() * 0.96)
         self.width = int(screen_geometry.width() / 2)
         x = screen_geometry.x() + screen_geometry.width() - self.width
-        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2
+        y = screen_geometry.y() + (screen_geometry.height() - self.height) // 2 + 20
 
         self.setGeometry(x, y, self.width, self.height)
         self.font = QFont("Arial", 11)
@@ -234,7 +234,7 @@ class MultiAI(QMainWindow):
         # 创建 QTextEdit 作为用户输入区域
         self.entry = QTextEdit(self)
         self.entry.setMinimumHeight(50)
-        self.entry.setMaximumHeight(150)
+        self.entry.setMaximumHeight(100)
         self.entry.setReadOnly(False)
         self.entry.setPlaceholderText("主人，你好！请说出你的问题，回车键发送。")
         self.entry.installEventFilter(self)
@@ -470,8 +470,6 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " THINK\n")
 
         if ai_response:
-            self._insert_message_block(ai_response, QColor(144, 238, 144), "black", prefix=self.current_model + " REPLY\n")
-            self.text_to_speech(ai_response)
             self._insert_message_block(ai_response, QColor(250, 240, 000), "black",
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音
