@@ -75,7 +75,7 @@ class MultiAI(QMainWindow):
             "api_deepseek": "deepseek-chat",
             "api_kimi": "moonshot-v1-8k",
         }
-        self.current_model = "local_deepseek-r1:7b"
+        self.current_model = "local_deepseek-r1:1.5b"
         self.all_messages = [{"role": "system", "content": "You are a helpful assistant"}]
 
         self.setup_gui()
@@ -466,8 +466,6 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " THINK\n")
 
         if ai_response:
-            self._insert_message_block(ai_response, QColor(144, 238, 144), "black", prefix=self.current_model + " REPLY\n")
-            self.text_to_speech(ai_response)
             self._insert_message_block(ai_response, QColor(250, 240, 000), "black",
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音

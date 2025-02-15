@@ -470,8 +470,6 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " THINK\n")
 
         if ai_response:
-            self._insert_message_block(ai_response, QColor(144, 238, 144), "black", prefix=self.current_model + " REPLY\n")
-            self.text_to_speech(ai_response)
             self._insert_message_block(ai_response, QColor(250, 240, 000), "black",
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音
