@@ -70,12 +70,12 @@ class MultiAI(QMainWindow):
             "api_kimi": OpenAI(api_key=os.getenv("KIMI_API_KEY"), base_url="https://api.moonshot.cn/v1"),
         }
         self.models = {
-            "local_deepseek-r1:1.5b": "deepseek-r1:1.5b",
             "api_openai": "gpt-4o",
+            "local_deepseek-r1:1.5b": "deepseek-r1:1.5b",
             "api_deepseek": "deepseek-chat",
             "api_kimi": "moonshot-v1-8k",
         }
-        self.current_model = "local_deepseek-r1:1.5b"
+        self.current_model = "api_openai"
         self.all_messages = [{"role": "system", "content": "You are a helpful assistant"}]
 
         self.setup_gui()
@@ -83,7 +83,7 @@ class MultiAI(QMainWindow):
         # 初始化模型参数
         self.model_params = {
             "max_tokens": 1024,
-            "temperature": 0.75,
+            "temperature": 0.65,
             "top_p": 0.9,
         }
 
@@ -470,7 +470,16 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音
             if hasattr(self, 'record_button') and self.record_button.isChecked():
-                self.text_to_speech(ai_response)
+                speechs = self.remove_special_chars(ai_response)+"回答完毕！"
+                self.text_to_speech(speechs)
+                
+    def remove_special_chars(self, ai_response):
+        """
+        此函数用于删除输入字符串 ai_response 中的 '*' 和 '#' 字符。
+        :param ai_response: 输入的字符串
+        :return: 处理后不包含 '*' 和 '#' 的字符串
+        """
+        return ai_response.replace('*', '').replace('#', '')
 
     def ask_question(self, question):
         """
@@ -530,10 +539,11 @@ class MultiAI(QMainWindow):
             try:
                 communicate = edge_tts.Communicate(text, self.voice)
                 await communicate.save(self.output_file)
+                os.chmod(self.output_file, 0o644)
                 logger.info(f"语音已保存为 {self.output_file}")
-
-                  # 播放音频文件（在GUI主线程中执行）
-                self.play_audio_signal.emit()  # 使用信号触发播放      except Exception as e:
+                # 播放音频文件（在GUI主线程中执行）
+                self.play_audio_signal.emit()  # 使用信号触发播放音频
+                os.chmod(self.output_file, 0o644)
             except Exception as e:
                 logger.error(f"语音生成失败: {str(e)}")
 
