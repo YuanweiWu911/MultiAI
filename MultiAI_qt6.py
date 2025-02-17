@@ -69,17 +69,19 @@ class MultiAI(QMainWindow):
             "local_deepseek-r1:70b": None,
             "api_openai": OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.feidaapi.com/v1"),
             "api_deepseek": OpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com"),
+            "api_siliconflow": OpenAI(api_key=os.getenv("SILICONFLOW_API_KEY"), base_url="https://api.siliconflow.cn/v1"),
             "api_kimi": OpenAI(api_key=os.getenv("KIMI_API_KEY"), base_url="https://api.moonshot.cn/v1"),
         }
         self.models = {
-            "api_openai": "gpt-4o",
-            "api_kimi": "moonshot-v1-8k",
-            "api_deepseek": "deepseek-chat",
             "local_deepseek-r1:7b": "deepseek-r1:latest",
             "local_deepseek-r1:32b": "deepseek-r1:32b",
             "local_deepseek-r1:70b": "deepseek-r1:70b",
+            "api_openai": "gpt-4o",
+            "api_deepseek": "deepseek-chat",
+            "api_siliconflow": "deepseek-ai/DeepSeek-R1",
+            "api_kimi": "moonshot-v1-8k",
         }
-        self.current_model = "api_openai"
+        self.current_model = "local_deepseek-r1:7b"
         self.all_messages = [{"role": "system", "content": "You are a helpful assistant"}]
 
         self.setup_gui()
@@ -87,7 +89,7 @@ class MultiAI(QMainWindow):
         # 初始化模型参数
         self.model_params = {
             "max_tokens": 1024,
-            "temperature": 0.65,
+            "temperature": 0.75,
             "top_p": 0.9,
         }
 
@@ -103,7 +105,7 @@ class MultiAI(QMainWindow):
             "X-API-KEY": api_key,
             "Content-Type": "application/json"
         }
-        logger.info(f"Using API key: {api_key}")
+        logger.info(f"web search Using API key: {api_key}")
         proxy_url = os.getenv("PROXY_URL")
         async with aiohttp.ClientSession() as session:
             try:
@@ -470,20 +472,11 @@ class MultiAI(QMainWindow):
                                        prefix=self.current_model + " THINK\n")
 
         if ai_response:
-            self._insert_message_block(ai_response, QColor(250, 240, 000), "black",
+            self._insert_message_block(ai_response, QColor(000, 240, 000), "black",
                                        prefix=self.current_model + " REPLY\n")
             # 仅当录音按钮被按下时生成语音
             if hasattr(self, 'record_button') and self.record_button.isChecked():
-                speechs = self.remove_special_chars(ai_response)+"回答完毕！"
-                self.text_to_speech(speechs)
-                
-    def remove_special_chars(self, ai_response):
-        """
-        此函数用于删除输入字符串 ai_response 中的 '*' 和 '#' 字符。
-        :param ai_response: 输入的字符串
-        :return: 处理后不包含 '*' 和 '#' 的字符串
-        """
-        return ai_response.replace('*', '').replace('#', '')
+                self.text_to_speech(ai_response)
 
     def ask_question(self, question):
         """
@@ -541,13 +534,13 @@ class MultiAI(QMainWindow):
         """
         async def async_tts():
             try:
-                communicate = edge_tts.Communicate(text, self.voice)
+                proxy_url = os.getenv("PROXY_URL")
+                communicate = edge_tts.Communicate(text, self.voice, proxy=proxy_url)
                 await communicate.save(self.output_file)
-                os.chmod(self.output_file, 0o644)
                 logger.info(f"语音已保存为 {self.output_file}")
-                # 播放音频文件（在GUI主线程中执行）
-                self.play_audio_signal.emit()  # 使用信号触发播放音频
-                os.chmod(self.output_file, 0o644)
+
+                  # 播放音频文件（在GUI主线程中执行）
+                self.play_audio_signal.emit()  # 使用信号触发播放      except Exception as e:
             except Exception as e:
                 logger.error(f"语音生成失败: {str(e)}")
 
